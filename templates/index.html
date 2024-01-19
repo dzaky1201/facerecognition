@@ -1,0 +1,51 @@
+{% extends "_layout.html" %} {% block content %}
+<div class="container">
+  <div class="jumbotron">
+    <div class="container mb-2">
+      <h1>Teacher Attendance System</h1>
+      <div class="row">
+        <img
+          id="webcamImage"
+          src="../static/img/no_video.png"
+          alt="Webcam Image"
+        />
+        
+      </div>
+      <p id="prediction"></p>
+      <button id="on-cam" type="button" class="btn btn-primary">on cam</button>
+      <button id="off-cam" type="button" class="btn btn-primary">
+        off cam
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block script %}
+<script>
+  var socket = io.connect("http://" + document.domain + ":" + location.port);
+
+  $("#on-cam").click(function (event) {
+    socket.emit("request_prediction");
+  });
+
+  $("#off-cam").click(function (event) {
+    socket.emit("disconnect_request");
+  });
+
+  socket.on("prediction", function (data) {
+    document.getElementById("webcamImage").src =
+      "data:image/jpeg;base64," +
+      btoa(String.fromCharCode.apply(null, new Uint8Array(data.image)));
+    document.getElementById("prediction").innerText =
+      "Teacher Name: " +
+      data.class_name +
+      " - Akurasi: " +
+      data.confidence +
+      "%";
+  });
+
+  socket.on("disconnect", function (data) {
+    document.getElementById("webcamImage").src = "../static/img/no_video.png";
+    document.getElementById("prediction").innerText = "";
+  });
+</script>
+{% endblock %}
